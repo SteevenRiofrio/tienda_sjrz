@@ -1,69 +1,43 @@
-const pool = require('../config/database');
+const Categoria = require('../models/Categoria');
 
-const categoriasController = {
-    // GET - Obtener todas las categorías
-    getAll: async (req, res) => {
-        try {
-            const [rows] = await pool.execute('SELECT * FROM Categorias');
-            res.json(rows);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+const categoriaController = {
+    getAll: (req, res) => {
+        Categoria.getAll((err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(result);
+        });
     },
 
-    // GET - Obtener categoría por ID
-    getById: async (req, res) => {
-        try {
-            const [rows] = await pool.execute('SELECT * FROM Categorias WHERE Id = ?', [req.params.id]);
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'Categoría no encontrada' });
-            }
-            res.json(rows[0]);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    getById: (req, res) => {
+        Categoria.getById(req.params.id, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.length === 0) return res.status(404).json({ message: 'Categoría no encontrada' });
+            res.json(result[0]);
+        });
     },
 
-    // POST - Crear nueva categoría
-    create: async (req, res) => {
-        try {
-            const { Nombre } = req.body;
-            const [result] = await pool.execute('INSERT INTO Categorias (Nombre) VALUES (?)', [Nombre]);
-            res.status(201).json({ 
-                message: 'Categoría creada exitosamente', 
-                id: result.insertId 
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    create: (req, res) => {
+        Categoria.create(req.body, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ message: 'Categoría creada', id: result.insertId });
+        });
     },
 
-    // PUT - Actualizar categoría
-    update: async (req, res) => {
-        try {
-            const { Nombre } = req.body;
-            const [result] = await pool.execute('UPDATE Categorias SET Nombre = ? WHERE Id = ?', [Nombre, req.params.id]);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Categoría no encontrada' });
-            }
-            res.json({ message: 'Categoría actualizada exitosamente' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    update: (req, res) => {
+        Categoria.update(req.params.id, req.body, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'Categoría no encontrada' });
+            res.json({ message: 'Categoría actualizada' });
+        });
     },
 
-    // DELETE - Eliminar categoría
-    delete: async (req, res) => {
-        try {
-            const [result] = await pool.execute('DELETE FROM Categorias WHERE Id = ?', [req.params.id]);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Categoría no encontrada' });
-            }
-            res.json({ message: 'Categoría eliminada exitosamente' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    delete: (req, res) => {
+        Categoria.delete(req.params.id, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'Categoría no encontrada' });
+            res.json({ message: 'Categoría eliminada' });
+        });
     }
 };
 
-module.exports = categoriasController;
+module.exports = categoriaController;

@@ -1,78 +1,43 @@
-const pool = require('../config/database');
+const Subcategoria = require('../models/Subcategoria');
 
-const subcategoriasController = {
-    // GET - Obtener todas las subcategorías
-    getAll: async (req, res) => {
-        try {
-            const [rows] = await pool.execute(`
-                SELECT s.Id, s.Nombre, s.CategoriaId, c.Nombre as CategoriaNombre 
-                FROM Subcategorias s 
-                JOIN Categorias c ON s.CategoriaId = c.Id
-            `);
-            res.json(rows);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+const subcategoriaController = {
+    getAll: (req, res) => {
+        Subcategoria.getAll((err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(result);
+        });
     },
 
-    // GET - Obtener subcategoría por ID
-    getById: async (req, res) => {
-        try {
-            const [rows] = await pool.execute(`
-                SELECT s.Id, s.Nombre, s.CategoriaId, c.Nombre as CategoriaNombre 
-                FROM Subcategorias s 
-                JOIN Categorias c ON s.CategoriaId = c.Id 
-                WHERE s.Id = ?
-            `, [req.params.id]);
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'Subcategoría no encontrada' });
-            }
-            res.json(rows[0]);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    getById: (req, res) => {
+        Subcategoria.getById(req.params.id, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.length === 0) return res.status(404).json({ message: 'Subcategoría no encontrada' });
+            res.json(result[0]);
+        });
     },
 
-    // POST - Crear nueva subcategoría
-    create: async (req, res) => {
-        try {
-            const { Nombre, CategoriaId } = req.body;
-            const [result] = await pool.execute('INSERT INTO Subcategorias (Nombre, CategoriaId) VALUES (?, ?)', [Nombre, CategoriaId]);
-            res.status(201).json({ 
-                message: 'Subcategoría creada exitosamente', 
-                id: result.insertId 
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    create: (req, res) => {
+        Subcategoria.create(req.body, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ message: 'Subcategoría creada', id: result.insertId });
+        });
     },
 
-    // PUT - Actualizar subcategoría
-    update: async (req, res) => {
-        try {
-            const { Nombre, CategoriaId } = req.body;
-            const [result] = await pool.execute('UPDATE Subcategorias SET Nombre = ?, CategoriaId = ? WHERE Id = ?', [Nombre, CategoriaId, req.params.id]);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Subcategoría no encontrada' });
-            }
-            res.json({ message: 'Subcategoría actualizada exitosamente' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    update: (req, res) => {
+        Subcategoria.update(req.params.id, req.body, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'Subcategoría no encontrada' });
+            res.json({ message: 'Subcategoría actualizada' });
+        });
     },
 
-    // DELETE - Eliminar subcategoría
-    delete: async (req, res) => {
-        try {
-            const [result] = await pool.execute('DELETE FROM Subcategorias WHERE Id = ?', [req.params.id]);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Subcategoría no encontrada' });
-            }
-            res.json({ message: 'Subcategoría eliminada exitosamente' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+    delete: (req, res) => {
+        Subcategoria.delete(req.params.id, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'Subcategoría no encontrada' });
+            res.json({ message: 'Subcategoría eliminada' });
+        });
     }
 };
 
-module.exports = subcategoriasController;
+module.exports = subcategoriaController;
